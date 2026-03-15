@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export async function checkAndAddUser(email: string, name: string) {
     if (!email) return
@@ -17,9 +17,9 @@ export async function checkAndAddUser(email: string, name: string) {
                     name
                 }
             })
-            console.error("Erreur lors de la vérification de l'utilisateur:");
-        }else{
-            console.error("Utilisateur déjàprésent dans la base de donnée");
+            console.error("Ajout de l'utilisateur dans la base de données");
+        } else {
+            console.error("Utilisateur déjà présent dans la base de données");
         }
     } catch (error) {
         console.error("Erreur lors de la vérification de l'utilisateur:", error);

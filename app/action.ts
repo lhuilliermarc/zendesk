@@ -152,24 +152,24 @@ export async function addUserToProject(email: string, inviteCode: string) {
     }
 }
 
-export async function getProjectsAssociatedWithUser(email:string) {
+export async function getProjectsAssociatedWithUser(email: string) {
     try {
         const projects = await prisma.project.findMany({
-            where : {
-                users : {
-                    some : {
-                        user : {
+            where: {
+                users: {
+                    some: {
+                        user: {
                             email
                         }
                     }
                 }
             },
-            include : {
-                tasks : true,
-                users : {
-                    select : {
-                        user : {
-                            select : {
+            include: {
+                tasks: true,
+                users: {
+                    select: {
+                        user: {
+                            select: {
                                 id: true,
                                 name: true,
                                 email: true,
@@ -185,7 +185,110 @@ export async function getProjectsAssociatedWithUser(email:string) {
         }))
 
         return formattedProjects
-        
+
+    } catch (error) {
+        console.error(error)
+        throw new Error
+    }
+}
+
+export async function getProjectInfo(idProject: string, details: boolean) {
+    try {
+        const project = await prisma.project.findUnique({
+            where: {
+                id: idProject
+            },
+            include: details ? {
+                tasks: {
+                    include: {
+                        user: true,
+                        createdBy: true
+                    }
+
+                },
+                users: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            }
+                        }
+                    }
+                },
+                createdBy: true
+            } : undefined,
+        })
+        if (!project) {
+            throw new Error("Projet non trouvé")
+        }
+        return project
+    } catch (error) {
+        console.error(error)
+        throw new Error
+    }
+}
+
+export async function getProjectUsers(idProject: string) {
+    try {
+        const projectWithUser = await prisma.project.findUnique({
+            where: {
+                id: idProject
+            },
+            include: {
+                users: {
+                    include: {
+                        user: true,
+                    }
+                },
+            }
+        })
+        const users = projectWithUser?.users.map((projectUser => projectUser.user)) || []
+        return users
+    } catch (error) {
+        console.error(error)
+        throw new Error
+    }
+}
+
+export async function createTask(
+    name: string,
+    description: string,
+    dueDate: Date | null,
+    projectId: string,
+    createdByEmail: string,
+    assignToEmail: string | undefined
+) {
+    try {
+        const createdBy = await prisma.user.findUnique({
+            where: { email: createdByEmail }
+        })
+        if (!createdBy) {
+            throw new Error(`Utilisateur avec l'email ${createdByEmail} introuvable`);
+        }
+        let assignedUserId = createdBy.id
+        if (assignToEmail) {
+            const assignedUser = await prisma.user.findUnique({
+                where: { email: createdByEmail }
+            })
+            if (!assignedUser) {
+                throw new Error(`Utilisateur avec l'email ${assignToEmail} introuvable`);
+            }
+            assignedUserId = assignedUser.id
+        }
+        const newTask = await prisma.task.create({
+            data: {
+                name,
+                description,
+                dueDate,
+                projectId,
+                createdById: createdBy.id,
+                userId: assignedUserId
+            }
+        })
+        console.log('Tâche créée avec succès', newTask);
+        return newTask;
     } catch (error) {
         console.error(error)
         throw new Error

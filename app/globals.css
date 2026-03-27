@@ -24,3 +24,29 @@
 .ql-editor::selection {
     color: #000;
 }
+
+.ql-editor {
+  max-width: 100%;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+.ql-editor * {
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.ql-editor img {
+  max-width: 100% !important;
+  height: auto;
+}
+
+.ql-editor pre {
+  overflow-x: auto;
+}
+
+.ql-editor table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
